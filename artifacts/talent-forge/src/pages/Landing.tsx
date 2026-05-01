@@ -52,16 +52,19 @@ export default function Landing() {
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   useEffect(() => {
+    setLogLines([]);
     let idx = 0;
-    intervalRef.current = setInterval(() => {
+    const iv = setInterval(() => {
       if (idx < terminalLines.length) {
-        setLogLines(prev => [...prev, terminalLines[idx]]);
+        const line = terminalLines[idx];
+        if (line) setLogLines(prev => [...prev, line]);
         idx++;
       } else {
-        if (intervalRef.current) clearInterval(intervalRef.current);
+        clearInterval(iv);
       }
     }, 160);
-    return () => { if (intervalRef.current) clearInterval(intervalRef.current); };
+    intervalRef.current = iv;
+    return () => { clearInterval(iv); };
   }, []);
 
   useEffect(() => {
@@ -120,9 +123,9 @@ export default function Landing() {
                 </span>
               </div>
               <div ref={logRef} className="h-48 overflow-y-auto p-4 space-y-0.5" style={{ background: "#020408" }}>
-                {logLines.map((line, i) => (
+                {logLines.map((line, i) => line ? (
                   <div key={i} className="font-mono text-xs leading-5" style={{ color: lineTextColor(line.type) }}>{line.text}</div>
-                ))}
+                ) : null)}
                 {logLines.length < terminalLines.length && (
                   <div className="font-mono text-xs text-gray-600 animate-pulse">▋</div>
                 )}

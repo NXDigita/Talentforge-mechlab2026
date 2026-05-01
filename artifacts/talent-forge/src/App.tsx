@@ -1,8 +1,6 @@
 import { Switch, Route, Router as WouterRouter } from "wouter";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "react-hot-toast";
-import { AnimatePresence } from "framer-motion";
-
 import Landing from "@/pages/Landing";
 import Dashboard from "@/pages/Dashboard";
 import DesignVault from "@/pages/DesignVault";
@@ -20,22 +18,20 @@ const queryClient = new QueryClient();
 
 function Router() {
   return (
-    <AnimatePresence mode="wait">
-      <Switch>
-        <Route path="/" component={Landing} />
-        <Route path="/dashboard" component={Dashboard} />
-        <Route path="/designvault/:id" component={DesignVaultDetail} />
-        <Route path="/designvault" component={DesignVault} />
-        <Route path="/simforge/:runId" component={SimForgeRun} />
-        <Route path="/simforge" component={SimForge} />
-        <Route path="/mechedge" component={MechEdge} />
-        <Route path="/challenges/:id" component={ChallengeWorkspace} />
-        <Route path="/challenges" component={Challenges} />
-        <Route path="/portfolio/:username" component={Portfolio} />
-        <Route path="/leaderboard" component={Leaderboard} />
-        <Route component={NotFound} />
-      </Switch>
-    </AnimatePresence>
+    <Switch>
+      <Route path="/" component={Landing} />
+      <Route path="/dashboard" component={Dashboard} />
+      <Route path="/designvault/:id" component={DesignVaultDetail} />
+      <Route path="/designvault" component={DesignVault} />
+      <Route path="/simforge/:runId" component={SimForgeRun} />
+      <Route path="/simforge" component={SimForge} />
+      <Route path="/mechedge" component={MechEdge} />
+      <Route path="/challenges/:id" component={ChallengeWorkspace} />
+      <Route path="/challenges" component={Challenges} />
+      <Route path="/portfolio/:username" component={Portfolio} />
+      <Route path="/leaderboard" component={Leaderboard} />
+      <Route component={NotFound} />
+    </Switch>
   );
 }
 
