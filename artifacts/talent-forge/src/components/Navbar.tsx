@@ -24,7 +24,7 @@ export function Navbar() {
       </div>
       <div className="ml-auto flex items-center gap-3">
         <button onClick={handleCTA} className="hidden md:block text-sm text-gray-400 hover:text-white transition-colors" data-testid="button-signin">Sign In</button>
-        <button onClick={handleCTA} className="hidden md:block px-4 py-1.5 bg-[#F97316] text-white text-sm font-semibold rounded hover:bg-[#ea6c0f] transition-colors" data-testid="button-start-free">Start Free</button>
+        <button onClick={handleCTA} className="hidden md:block px-4 py-1.5 bg-[#F97316] text-white text-sm font-semibold rounded hover:bg-[#ea6c0f] transition-colors" data-testid="button-start-free">Start Simulation</button>
         <button className="md:hidden text-gray-400" onClick={() => setMobileOpen(!mobileOpen)}>
           {mobileOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
         </button>
@@ -34,7 +34,7 @@ export function Navbar() {
           {["Dashboard", "SimForge", "MechEdge", "Challenges", "Leaderboard"].map(p => (
             <Link key={p} href={`/${p.toLowerCase()}`} onClick={() => setMobileOpen(false)} className="text-gray-300 hover:text-[#F97316] py-1">{p}</Link>
           ))}
-          <button onClick={handleCTA} className="mt-2 px-4 py-2 bg-[#F97316] text-white text-sm font-semibold rounded">Start Free</button>
+          <button onClick={handleCTA} className="mt-2 px-4 py-2 bg-[#F97316] text-white text-sm font-semibold rounded">Start Simulation</button>
         </div>
       )}
     </nav>
