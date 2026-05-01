@@ -1,0 +1,150 @@
+TALENT FORGE — Mechanical Engineering Simulation Platform
+Build a React + TypeScript (Vite) SPA with Tailwind CSS dark mode.
+Tagline: "Your Designs. Stress-Tested. Verified."
+
+━━ DESIGN SYSTEM ━━
+Dark only. Root bg: #0A0F1E. Surfaces: #111827. Elevated: #1F2937.
+Primary accent: #F97316 (orange). Secondary: #60A5FA (steel blue).
+Success: #22C55E. Warning: #FBBF24. Danger: #EF4444.
+Fonts: Space Grotesk (headings, 500/600/700) + Inter (body) + JetBrains Mono (all technical values, logs, measurements).
+Cards: bg #111827, 1px solid #1F2937, radius 8px, hover border → orange.
+Buttons: orange primary (#F97316), steel-blue outline secondary.
+Status pills: SAFE (green), CRITICAL (red), WARN (amber), RUNNING (amber), FAILED (red), MESHING (blue).
+
+━━ ROUTES ━━
+/ Landing | /dashboard | /designvault | /designvault/:id
+/simforge | /simforge/:runId (HERO PAGE) | /mechedge
+/challenges | /challenges/:id | /portfolio/:username | /leaderboard
+
+━━ MOCK DATA (mockData.ts) ━━
+5 simulation runs: spur-gear-assembly (FEA, SAFE, 89/100, SF 2.84),
+bracket-mount-v1 (FEA, CRITICAL, 31/100, SF 0.87),
+pipe-bend-flow (CFD, WARN, 74/100), gear-train-4stage (Kinematics, SAFE, 92/100),
+cooling-fin-array (Thermal, SAFE, 87/100, SF 4.1).
+User: Raj Kumar, Expert Tier, TFES 86/100, 63 sims, 8 NFT badges, 4320/6000 XP.
+5 challenges: FEA-STR-007 (cantilever beam, 320XP, ₹9500), CFD-INT-003, KIN-GEA-002, FEA-THM-001, MFG-CNC-001.
+7 materials: AISI 1045 Steel (E=205GPa, Sy=530MPa), AISI 304 SS (E=193GPa, Sy=215MPa),
+Al 6061-T6 (E=68.9GPa, Sy=276MPa), Al 1060, Grey Cast Iron, Ti-6Al-4V, HDPE.
+
+━━ PAGE 1: Landing (/) ━━
+Fixed navbar: logo "⚙️ Talent Forge" + "MECH LAB" orange badge | nav links | Sign In + orange CTA.
+Hero: faint animated SVG isometric grid background (opacity 0.03, slow drift up).
+  Eyebrow (JetBrains Mono, orange): "▸ FEA · CFD · CAD · KINEMATICS — SIMULATION ENGINE v2.0"
+  H1: "Your Designs." white + "Stress-Tested. Verified." orange.
+  Sub: 17px Inter, muted.
+  CTAs: "⚙️ Start Simulating — Free" (orange) + "▶ Watch a Live FEA Run" (ghost blue).
+  Animated terminal block: lines stream in at 160ms intervals showing a spur gear FEA run —
+    mesh progress bar, convergence log (residual 2.1e-6), peak stress 187.4 MPa, SF 2.84 ✅ SAFE, score 89/100, badge mint.
+Stats strip: 63 Active Simulations | 8 Domains | 11,200+ XP Today | 1,800+ Portfolios.
+3 module cards: Design Vault (GitHub-style CAD repo), SimForge (Vercel-style pipeline), MechEdge (Cloudflare-style analytics).
+6 domain cards: FEA Structural (47), CFD Flow (31), CAD (52), Kinematics (28), Manufacturing (35), Thermal (24).
+Scrolling leaderboard ticker (JetBrains Mono, orange).
+Bottom CTA banner with "Create Free Account →".
+
+━━ PAGE 2: Dashboard (/dashboard) ━━
+Layout: fixed navbar + 248px sidebar + scrollable main.
+Sidebar: user card (Raj Kumar, Expert 🟠, TFES 86/100) + nav + XP progress bar (72%, 4320/6000).
+4 stat cards: TFES gauge (SVG arc, 86/100), Sims run (63, mini bar chart), Safety Factor avg (2.7x), NFT badges (8).
+Simulation table: last 10 runs — Status | Project | Type | Score | SF | Duration | Action.
+  SF color: red <1.5, amber 1.5–2.0, green >2.0.
+2 active challenge cards with progress bars.
+Inline FEA preview widget: SVG gear tooth stress map (heat spectrum: red root fillet → blue hub),
+  annotations for max 187.4 MPa and min 12.1 MPa, color scale legend, stats row below.
+
+━━ PAGE 3: Design Vault (/designvault) ━━
+GitHub-style profile. Tabs: Overview | Repositories | Projects | Badges | Forks.
+Left col: profile, TFES score, verified skill chips (green=passed, grey=not attempted).
+Right col:
+  Contribution heatmap: pure SVG, 52×7 rects, 5 shades of green by activity count, hover tooltip.
+  Pinned projects (6 cards, 2×3): name, description, score, SF, stars, forks, domain tag.
+Repository list: search + sort, rows with file type tags and scores.
+
+Project detail (/designvault/:id):
+  Header: username/project, tabs (Files | Simulations | Commits | Score Report), branch selector.
+  Split panel: left = file tree (.step, .pdf, .json, .simlog files), right = file viewer.
+  File viewers: README→rendered markdown, .step→wireframe SVG isometric, .simlog→JSON highlight,
+  .json material→properties table (JetBrains Mono), .fea.json→inline stress map.
+  Commit history: JetBrains Mono hash codes (e.g. [a3f9c1]), 4 commits shown.
+
+━━ PAGE 4: SimForge (/simforge) ━━
+Overview: pipeline stats (63 runs, 76% pass rate, avg 81/100), deployment table (Vercel-style).
+Filter tabs: All | Safe | Critical | Warning | Running.
+
+Run page (/simforge/:runId) — HERO PAGE, 40% of build effort:
+Header: status badge + project + score + SF + material + load. Tabs: Analysis Log | Stress Map | Score Report | Raw Data.
+
+ANALYSIS LOG TAB:
+  7-stage pipeline bar (pills connected by line): Init→Import→Mesh→Boundary→Solve→Results→Certify.
+    State: grey=pending, amber+spinner=running, green=complete. Animates as log streams.
+  Full terminal log streams line-by-line at 160ms/line. Key content:
+    Stage headers as dividers (─── Stage N: Name ───).
+    Timestamps [HH:MM:SS.mmm], ✓ for success, → for in-progress.
+    Notable values: 42,800 elements, Jacobian 0.92, residual 2.1e-6, SF=530/187.4=2.84 ✅ SAFE, score 89/100.
+    Badge mint: Polygon PoS address, TFES update 82→86.
+  Auto-scroll to bottom as lines appear.
+
+STRESS MAP TAB:
+  SVG gear tooth cross-section (dark blueprint bg):
+    Root fillet = red (#FF0000), tooth flank = orange→yellow gradient, tooth tip = green, hub = blue.
+    Annotation leader lines: "Max: 187.4 MPa", "Min: 8.3 MPa", "Contact: 412 MPa".
+    Vertical color scale legend (200MPa red → 0MPa blue).
+    "Show Displacement" toggle → overlays ×200 scale deformation arrows.
+  4-column stats below: stress summary, SF details, displacement, mesh info.
+
+SCORE REPORT TAB:
+  Recharts horizontal bar chart (orange bars): 5 criteria with % scores.
+  AI feedback cards: ✅ for passes, ⚠️ for warnings with specific improvement tips.
+  "Improve Design and Re-Deploy →" button.
+
+━━ PAGE 5: MechEdge (/mechedge) ━━
+Header: profile handle + 4-stat row (TFES, sims, avg SF, profile views) with week-over-week deltas.
+Recharts AreaChart: 30-day score trend, orange fill, 7-day moving avg blue dashed, [7D|30D|90D|All] toggle.
+Recharts LineChart: SF history with reference lines at 1.0 (red, FAILURE), 1.5 (amber, MIN SAFE), 2.5 (green, TARGET).
+  Background zones colored per SF range.
+Recharts RadarChart: 6-axis competency map (FEA, CFD, CAD, Kinematics, Manufacturing, Thermal).
+  User (orange fill) vs domain average (grey dashed).
+Domain performance table: 6 rows, columns Attempts | Best | Avg | Best SF | Status | Action.
+NFT credential wall (3-col grid): badge icon, name, score, SF, date, Polygon token address, [View on Chain] + [Share].
+Credential Shield panel: 3 verified checks (cryptographic, CIE auto-graded, on-chain).
+Employer verification: shareable URL, QR code button, 3 recent employer view events.
+
+━━ PAGE 6: Challenge Workspace (/challenges/:id) ━━
+3-panel layout: left brief (280px) | center workspace | right output (320px).
+Left: challenge ID (FEA-STR-007), difficulty, domain, objective, given specs, acceptance criteria,
+  analytical reference formulas, reward (XP + ₹ + badge name), countdown timer.
+Center tabs: Model Setup | Material | Boundary Conditions | Notes.
+  Model Setup: SVG isometric cantilever beam (fixed end hatching orange, load arrow red "500 N ↓", dimension lines).
+    Config form: L/W/H inputs, mesh size, element type.
+  Material: dropdown selector (7 materials), live property card in JetBrains Mono.
+  Boundary Conditions: fixed constraint face + applied load form, confirmation summary.
+Right panel: SVG beam preview → on Run Analysis → animated stages (Meshing→BC→Solving→Results→Score).
+  Result: SVG stress map (heat spectrum, deformed shape dashed overlay ×100), score badge with bounce animation.
+  AI feedback: terminal-style lines per criterion with pass/warn/tip indicators.
+  Buttons: [Adjust Setup] + [Submit Final →].
+
+━━ PAGE 7: Portfolio (/portfolio/:username) ━━
+Public, no auth. Green "VERIFIED ENGINEERING PORTFOLIO" shield badge.
+TFES gauge, stats strip (sims, badges, avg SF, ₹ earned).
+Domain radar + table, top 5 FEA runs, NFT credential wall.
+Design timeline: vertical chronological (badge earned, micro-project completed).
+Employer contact CTA.
+
+━━ PAGE 8: Leaderboard (/leaderboard) ━━
+Domain tabs: Overall | FEA | CFD | CAD | Kinematics | Thermal.
+Filter: All India | Tamil Nadu | Tier 2 | By Institute.
+Top 3 podium (large visual). Full table: Rank | Name | City | Tier | XP | TFES | Avg SF | Top Domain | Badges.
+Highlight current user row in orange tint.
+
+━━ KEY TECHNICAL RULES ━━
+1. Dark theme only, no light mode.
+2. JetBrains Mono for all: stress values, SF, mesh counts, material props, convergence residuals, log lines.
+3. Safety Factor color: SF<1.0→red, 1.0–1.5→amber, 1.5–2.5→green, >2.5→bright green ✅.
+4. FEA stress map: SVG with linearGradient heat spectrum fills (not image). Gear tooth or beam profile.
+5. CFD flow map: SVG paths animated with stroke-dashoffset CSS keyframes.
+6. Terminal log: useState array, setInterval 160ms, useEffect auto-scroll ref.
+7. Stage pipeline: 7 pills animated grey→amber→green as log index crosses stage thresholds.
+8. Contribution heatmap: pure SVG rects (52 cols × 7 rows), no library.
+9. All Recharts: bg transparent, grid #1F2937, axis labels #6B7280, primary trace orange.
+10. Framer Motion page transitions. Mobile: sidebar→drawer <768px.
+11. All CTAs: React Hot Toast "⚙️ Simulation feature live soon!".
+12. TypeScript strict mode. Stack: React 18, Vite, Tailwind, Recharts, Lucide, Framer Motion, React Hot Toast.
