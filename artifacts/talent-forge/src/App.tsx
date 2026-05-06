@@ -12,6 +12,7 @@ import Challenges from "@/pages/Challenges";
 import ChallengeWorkspace from "@/pages/ChallengeWorkspace";
 import Portfolio from "@/pages/Portfolio";
 import Leaderboard from "@/pages/Leaderboard";
+import TalentPipeline from "@/pages/TalentPipeline";
 import NotFound from "@/pages/not-found";
 
 const queryClient = new QueryClient();
@@ -30,6 +31,7 @@ function Router() {
       <Route path="/challenges" component={Challenges} />
       <Route path="/portfolio/:username" component={Portfolio} />
       <Route path="/leaderboard" component={Leaderboard} />
+      <Route path="/talent-pipeline" component={TalentPipeline} />
       <Route component={NotFound} />
     </Switch>
   );
