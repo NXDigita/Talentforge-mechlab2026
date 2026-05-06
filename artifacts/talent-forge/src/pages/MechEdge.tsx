@@ -1,9 +1,10 @@
-import { useState } from "react";
-import { motion } from "framer-motion";
+import { useState, useEffect } from "react";
+import { Link } from "wouter";
+import { motion, AnimatePresence } from "framer-motion";
 import { Navbar } from "@/components/Navbar";
 import { Sidebar } from "@/components/Sidebar";
 import { currentUser, analyticsData, nftBadges } from "@/data/mockData";
-import { Menu, Shield, Copy, ExternalLink, Share2 } from "lucide-react";
+import { Menu, Shield, Copy, ExternalLink, Share2, Sparkles, TrendingUp, TrendingDown, AlertTriangle, Target, Zap, RefreshCw, ChevronRight } from "lucide-react";
 import { AreaChart, Area, LineChart, Line, RadarChart, Radar, PolarGrid, PolarAngleAxis, PolarRadiusAxis, ReferenceLine, ReferenceArea, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from "recharts";
 import toast from "react-hot-toast";
 
@@ -29,11 +30,305 @@ const DOMAIN_TABLE = [
 
 const RANGES = ["7D", "30D", "90D", "All"] as const;
 
+/* ─── AI Insights engine ─── */
+type InsightType = "warning" | "opportunity" | "trend" | "action" | "achievement";
+
+interface Insight {
+  id: string;
+  type: InsightType;
+  title: string;
+  body: string;
+  metric: string;
+  metricLabel: string;
+  metricColor: string;
+  cta: string;
+  ctaHref?: string;
+  icon: typeof TrendingUp;
+}
+
+function generateInsights(seed: number): Insight[] {
+  const recentScores = analyticsData.slice(-7).map(d => d.score);
+  const prevScores = analyticsData.slice(-14, -7).map(d => d.score);
+  const recentAvg = recentScores.reduce((a, b) => a + b, 0) / recentScores.length;
+  const prevAvg = prevScores.reduce((a, b) => a + b, 0) / prevScores.length;
+  const scoreDelta = recentAvg - prevAvg;
+
+  const feaAvg = DOMAIN_TABLE.find(d => d.domain === "FEA Structural")?.avg ?? 81;
+  const cfdAvg = DOMAIN_TABLE.find(d => d.domain === "CFD Flow")?.avg ?? 67;
+  const cfdGap = feaAvg - cfdAvg;
+
+  const cadScore = COMPETENCY.find(c => c.subject === "CAD")?.user ?? 65;
+  const cadAvg = COMPETENCY.find(c => c.subject === "CAD")?.avg ?? 70;
+
+  const mfgAttempts = DOMAIN_TABLE.find(d => d.domain === "Manufacturing")?.attempts ?? 2;
+
+  const recentSFs = analyticsData.slice(-7).map(d => d.sf);
+  const sfTrend = recentSFs[recentSFs.length - 1] - recentSFs[0];
+
+  const insights: Insight[] = [
+    {
+      id: "cfd-gap",
+      type: "warning",
+      title: "CFD scores lag FEA by 14 points",
+      body: `Your FEA avg (${feaAvg}) is ${cfdGap} pts above CFD avg (${cfdAvg}). This gap is holding back your TFES ceiling. Turbulence model selection (k-ε vs k-ω SST) is the most common failure point in your CFD runs.`,
+      metric: `−${cfdGap} pts`,
+      metricLabel: "FEA vs CFD gap",
+      metricColor: "#EF4444",
+      cta: "Try CFD Challenge",
+      ctaHref: "/challenges",
+      icon: AlertTriangle,
+    },
+    {
+      id: "score-momentum",
+      type: scoreDelta >= 0 ? "trend" : "warning",
+      title: scoreDelta >= 0
+        ? `Score up ${scoreDelta.toFixed(1)} pts this week`
+        : `Score down ${Math.abs(scoreDelta).toFixed(1)} pts this week`,
+      body: scoreDelta >= 0
+        ? `7-day moving average is climbing. Your mesh quality scores improved most — Jacobian values above 0.90 are consistently unlocking the top score tier.`
+        : `Recent simulations pulled your average down. Check your mesh density settings — 3 of your last 5 runs used coarse meshes (>5 mm) which capped scores below 75.`,
+      metric: `${scoreDelta >= 0 ? "+" : ""}${scoreDelta.toFixed(1)}`,
+      metricLabel: "7-day delta",
+      metricColor: scoreDelta >= 0 ? "#22C55E" : "#EF4444",
+      cta: "View Score Trend",
+      icon: scoreDelta >= 0 ? TrendingUp : TrendingDown,
+    },
+    {
+      id: "cad-below-avg",
+      type: "opportunity",
+      title: "CAD score is 5 pts below domain average",
+      body: `Your CAD competency (${cadScore}) sits below the platform average (${cadAvg}). You've only attempted 4 CAD projects. Completing 3 more would unlock the CAD Fundamentals badge and boost your TFES by an estimated +6 pts.`,
+      metric: `${cadScore} vs ${cadAvg}`,
+      metricLabel: "You vs domain avg",
+      metricColor: "#F59E0B",
+      cta: "Start CAD Project",
+      ctaHref: "/designvault",
+      icon: Target,
+    },
+    {
+      id: "thermal-strength",
+      type: "achievement",
+      title: "Thermal Engineering is your hidden strength",
+      body: `Avg SF of 4.1x in Thermal — top 8% platform-wide. With only 8 attempts, you're already Advanced tier. Two Expert-level Thermal challenges would push you to the top 3% and qualify for the Thermal Engineer Elite badge (₹18,500 prize).`,
+      metric: "4.10x",
+      metricLabel: "Avg SF in Thermal",
+      metricColor: "#22C55E",
+      cta: "View Thermal Challenge",
+      ctaHref: "/challenges",
+      icon: Zap,
+    },
+    {
+      id: "manufacturing-gap",
+      type: "action",
+      title: `Manufacturing: only ${mfgAttempts} attempts logged`,
+      body: `Manufacturing is your least explored domain — ${mfgAttempts} runs vs your FEA total of 28. Employers in Tier 1 automotive firms filter specifically for CNC + FEA combined profiles. Even 3–4 Manufacturing runs would round out your portfolio significantly.`,
+      metric: `${mfgAttempts} runs`,
+      metricLabel: "vs 28 in FEA",
+      metricColor: "#60A5FA",
+      cta: "Try CNC Challenge",
+      ctaHref: "/challenges",
+      icon: Target,
+    },
+    {
+      id: "sf-trend",
+      type: sfTrend >= 0 ? "trend" : "warning",
+      title: sfTrend >= 0
+        ? "Safety Factor improving — great material choices"
+        : "Safety Factor dipping — review material selections",
+      body: sfTrend >= 0
+        ? `SF has risen ${sfTrend.toFixed(2)}x over the last 7 sims. Switching from Al 6061 to AISI 1045 Steel on structural runs is paying off. Keep this material strategy for load-heavy challenges.`
+        : `SF dropped ${Math.abs(sfTrend).toFixed(2)}x recently. Bracket Mount v1 (SF 0.87) is dragging the average. Re-run with increased cross-section height or switch to Ti-6Al-4V for critical load paths.`,
+      metric: `${sfTrend >= 0 ? "+" : ""}${sfTrend.toFixed(2)}x`,
+      metricLabel: "SF change (7 sims)",
+      metricColor: sfTrend >= 0 ? "#22C55E" : "#EF4444",
+      cta: "View SF History",
+      icon: sfTrend >= 0 ? TrendingUp : TrendingDown,
+    },
+  ];
+
+  // Shuffle deterministically with seed
+  const shuffled = [...insights];
+  for (let i = shuffled.length - 1; i > 0; i--) {
+    const j = (seed * 7 + i * 13) % (i + 1);
+    [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+  }
+  return shuffled.slice(0, 4);
+}
+
+const TYPE_STYLES: Record<InsightType, { border: string; bg: string; badge: string; badgeText: string }> = {
+  warning:     { border: "border-red-500/25",    bg: "bg-red-500/5",    badge: "bg-red-500/15 text-red-400 border-red-500/20",       badgeText: "Warning" },
+  opportunity: { border: "border-amber-500/25",  bg: "bg-amber-500/5",  badge: "bg-amber-500/15 text-amber-400 border-amber-500/20", badgeText: "Opportunity" },
+  trend:       { border: "border-blue-500/25",   bg: "bg-blue-500/5",   badge: "bg-blue-500/15 text-blue-400 border-blue-500/20",    badgeText: "Trend" },
+  action:      { border: "border-[#60A5FA]/25",  bg: "bg-[#60A5FA]/5",  badge: "bg-blue-500/15 text-blue-400 border-blue-500/20",    badgeText: "Action" },
+  achievement: { border: "border-green-500/25",  bg: "bg-green-500/5",  badge: "bg-green-500/15 text-green-400 border-green-500/20", badgeText: "Achievement" },
+};
+
+/* ─── Typewriter hook ─── */
+function useTypewriter(text: string, speed = 28) {
+  const [displayed, setDisplayed] = useState("");
+  useEffect(() => {
+    setDisplayed("");
+    let i = 0;
+    const iv = setInterval(() => {
+      if (i < text.length) { setDisplayed(text.slice(0, i + 1)); i++; }
+      else clearInterval(iv);
+    }, speed);
+    return () => clearInterval(iv);
+  }, [text, speed]);
+  return displayed;
+}
+
+/* ─── AI Insights Panel ─── */
+function AIInsightsPanel() {
+  const [seed, setSeed] = useState(1);
+  const [loading, setLoading] = useState(false);
+  const [insights, setInsights] = useState<Insight[]>(() => generateInsights(1));
+  const [expanded, setExpanded] = useState<string | null>(insights[0]?.id ?? null);
+
+  const headerText = useTypewriter("Analyzing 63 simulations, 6 domains, 30-day trend data...", 22);
+
+  const refresh = () => {
+    setLoading(true);
+    setTimeout(() => {
+      const next = seed + 1;
+      setSeed(next);
+      setInsights(generateInsights(next));
+      setExpanded(null);
+      setLoading(false);
+    }, 1400);
+  };
+
+  return (
+    <div className="bg-[#111827] border border-[#1F2937] rounded-xl overflow-hidden">
+      {/* Header */}
+      <div className="flex items-center justify-between px-5 py-4 border-b border-[#1F2937]" style={{ background: "linear-gradient(135deg, #0D1424 0%, #111827 100%)" }}>
+        <div className="flex items-center gap-3">
+          <div className="w-8 h-8 rounded-lg bg-[#F97316]/15 border border-[#F97316]/20 flex items-center justify-center">
+            <Sparkles className="w-4 h-4 text-[#F97316]" />
+          </div>
+          <div>
+            <div className="font-semibold text-white text-sm" style={{ fontFamily: "Space Grotesk" }}>AI Performance Insights</div>
+            <div className="text-[10px] font-mono text-gray-600 h-3 overflow-hidden">
+              {loading ? (
+                <span className="text-[#F97316] animate-pulse">Re-analyzing your data...</span>
+              ) : (
+                <span>{headerText}</span>
+              )}
+            </div>
+          </div>
+        </div>
+        <button
+          onClick={refresh}
+          disabled={loading}
+          className="flex items-center gap-1.5 text-xs px-3 py-1.5 border border-[#374151] text-gray-400 hover:text-white hover:border-[#F97316]/50 rounded transition-colors disabled:opacity-40"
+          data-testid="btn-refresh-insights"
+        >
+          <RefreshCw className={`w-3 h-3 ${loading ? "animate-spin" : ""}`} />
+          Regenerate
+        </button>
+      </div>
+
+      {/* Insight cards */}
+      <div className="p-4 space-y-3">
+        <AnimatePresence mode="wait">
+          {loading ? (
+            <motion.div key="skeleton" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="space-y-3">
+              {[0, 1, 2, 3].map(i => (
+                <div key={i} className="h-16 rounded-lg bg-[#1F2937]/50 animate-pulse" style={{ animationDelay: `${i * 80}ms` }} />
+              ))}
+            </motion.div>
+          ) : (
+            <motion.div key={seed} initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.3 }} className="space-y-3">
+              {insights.map((insight, i) => {
+                const style = TYPE_STYLES[insight.type];
+                const Icon = insight.icon;
+                const isOpen = expanded === insight.id;
+
+                return (
+                  <motion.div
+                    key={insight.id}
+                    initial={{ opacity: 0, y: 8 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: i * 0.07 }}
+                    className={`border rounded-lg overflow-hidden transition-colors cursor-pointer ${style.border} ${isOpen ? style.bg : "border-[#1F2937] hover:border-[#374151]"}`}
+                    onClick={() => setExpanded(isOpen ? null : insight.id)}
+                    data-testid={`insight-card-${insight.id}`}
+                  >
+                    {/* Card header row */}
+                    <div className="flex items-center gap-3 px-4 py-3">
+                      <Icon className="w-4 h-4 flex-shrink-0" style={{ color: insight.metricColor }} />
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <span className="text-sm font-medium text-white" style={{ fontFamily: "Space Grotesk" }}>{insight.title}</span>
+                          <span className={`text-[10px] px-1.5 py-0.5 rounded border font-mono ${style.badge}`}>{style.badgeText}</span>
+                        </div>
+                      </div>
+                      <div className="text-right flex-shrink-0 mr-1">
+                        <div className="font-mono text-sm font-bold" style={{ color: insight.metricColor }}>{insight.metric}</div>
+                        <div className="text-[9px] text-gray-600 font-mono">{insight.metricLabel}</div>
+                      </div>
+                      <ChevronRight className={`w-4 h-4 text-gray-600 flex-shrink-0 transition-transform ${isOpen ? "rotate-90" : ""}`} />
+                    </div>
+
+                    {/* Expanded body */}
+                    <AnimatePresence>
+                      {isOpen && (
+                        <motion.div
+                          initial={{ height: 0, opacity: 0 }}
+                          animate={{ height: "auto", opacity: 1 }}
+                          exit={{ height: 0, opacity: 0 }}
+                          transition={{ duration: 0.2 }}
+                          className="overflow-hidden"
+                        >
+                          <div className="px-4 pb-4 border-t border-[#1F2937]/40">
+                            <p className="text-xs text-gray-400 leading-relaxed mt-3 mb-3">{insight.body}</p>
+                            {insight.ctaHref ? (
+                              <Link
+                                href={insight.ctaHref}
+                                className="inline-flex items-center gap-1.5 text-xs px-3 py-1.5 bg-[#F97316] text-white font-semibold rounded hover:bg-[#ea6c0f] transition-colors"
+                                onClick={e => e.stopPropagation()}
+                                data-testid={`insight-cta-${insight.id}`}
+                              >
+                                {insight.cta} <ChevronRight className="w-3 h-3" />
+                              </Link>
+                            ) : (
+                              <button
+                                onClick={e => { e.stopPropagation(); showToast(); }}
+                                className="inline-flex items-center gap-1.5 text-xs px-3 py-1.5 bg-[#F97316] text-white font-semibold rounded hover:bg-[#ea6c0f] transition-colors"
+                                data-testid={`insight-cta-${insight.id}`}
+                              >
+                                {insight.cta} <ChevronRight className="w-3 h-3" />
+                              </button>
+                            )}
+                          </div>
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
+                  </motion.div>
+                );
+              })}
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        {/* Summary footer */}
+        {!loading && (
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.4 }} className="pt-2 border-t border-[#1F2937] flex items-center justify-between text-[10px] font-mono text-gray-600">
+            <span>Based on {analyticsData.length} data points · {DOMAIN_TABLE.reduce((a, d) => a + d.attempts, 0)} simulations · 6 domains</span>
+            <span className="text-[#F97316]/60">TF-AI v2.1</span>
+          </motion.div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+/* ─── Main page ─── */
 export default function MechEdge() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [range, setRange] = useState<typeof RANGES[number]>("30D");
 
-  const sliced = range === "7D" ? analyticsData.slice(-7) : range === "30D" ? analyticsData : range === "90D" ? analyticsData : analyticsData;
+  const sliced = range === "7D" ? analyticsData.slice(-7) : analyticsData;
 
   const movingAvg = sliced.map((d, i) => ({
     ...d,
@@ -69,6 +364,9 @@ export default function MechEdge() {
               </div>
             ))}
           </div>
+
+          {/* AI Insights Panel — placed prominently above charts */}
+          <AIInsightsPanel />
 
           {/* Score trend chart */}
           <div className="bg-[#111827] border border-[#1F2937] rounded-lg p-5">
@@ -112,7 +410,7 @@ export default function MechEdge() {
             </ResponsiveContainer>
           </div>
 
-          {/* Competency radar */}
+          {/* Competency radar + domain table */}
           <div className="grid md:grid-cols-2 gap-6">
             <div className="bg-[#111827] border border-[#1F2937] rounded-lg p-5">
               <h2 className="font-semibold text-white mb-4" style={{ fontFamily: "Space Grotesk" }}>Competency Radar</h2>
@@ -128,12 +426,18 @@ export default function MechEdge() {
               </ResponsiveContainer>
             </div>
 
-            {/* Domain table */}
             <div className="bg-[#111827] border border-[#1F2937] rounded-lg p-5">
               <h2 className="font-semibold text-white mb-4" style={{ fontFamily: "Space Grotesk" }}>Domain Performance</h2>
               <div className="overflow-x-auto">
                 <table className="w-full text-xs">
-                  <thead><tr className="border-b border-[#1F2937] text-gray-400"><th className="text-left py-2 pr-3">Domain</th><th>Best</th><th>Avg</th><th>Status</th></tr></thead>
+                  <thead>
+                    <tr className="border-b border-[#1F2937] text-gray-400">
+                      <th className="text-left py-2 pr-3">Domain</th>
+                      <th>Best</th>
+                      <th>Avg</th>
+                      <th>Status</th>
+                    </tr>
+                  </thead>
                   <tbody>
                     {DOMAIN_TABLE.map(d => (
                       <tr key={d.domain} className="border-b border-[#1F2937]/40">
