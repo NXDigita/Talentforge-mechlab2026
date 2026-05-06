@@ -14,6 +14,7 @@ import Portfolio from "@/pages/Portfolio";
 import Leaderboard from "@/pages/Leaderboard";
 import TalentPipeline from "@/pages/TalentPipeline";
 import Playground from "@/pages/Playground";
+import MaterialsExplorer from "@/pages/MaterialsExplorer";
 import NotFound from "@/pages/not-found";
 
 const queryClient = new QueryClient();
@@ -34,6 +35,7 @@ function Router() {
       <Route path="/leaderboard" component={Leaderboard} />
       <Route path="/talent-pipeline" component={TalentPipeline} />
       <Route path="/playground" component={Playground} />
+      <Route path="/materials" component={MaterialsExplorer} />
       <Route component={NotFound} />
     </Switch>
   );
