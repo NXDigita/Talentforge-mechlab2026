@@ -1,5 +1,5 @@
 import { Link, useLocation } from "wouter";
-import { LayoutDashboard, FolderOpen, Zap, BarChart2, Trophy, Swords, Users, X } from "lucide-react";
+import { LayoutDashboard, FolderOpen, Zap, BarChart2, Trophy, Swords, Users, FlaskConical, X } from "lucide-react";
 import { currentUser } from "@/data/mockData";
 
 const navItems = [
@@ -8,6 +8,7 @@ const navItems = [
   { label: "SimForge", icon: Zap, href: "/simforge" },
   { label: "MechEdge", icon: BarChart2, href: "/mechedge" },
   { label: "Challenges", icon: Swords, href: "/challenges" },
+  { label: "Playground", icon: FlaskConical, href: "/playground" },
   { label: "Leaderboard", icon: Trophy, href: "/leaderboard" },
   { label: "Talent Pipeline", icon: Users, href: "/talent-pipeline" },
 ];
